@@ -1,0 +1,55 @@
+{
+  "name": "acryl-quick-notes",
+  "version": "0.2.0",
+  "description": "Tiny notebook icon in the TopBar that opens a Quick Notes list, each note persisted as its own txt file on the host",
+  "license": "MIT",
+  "keywords": [
+    "acryl-package",
+    "cordis-plugin",
+    "dsh-plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inboxxobni/acryl-quick-notes.git"
+  },
+  "homepage": "https://github.com/inboxxobni/acryl-quick-notes#readme",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./client": "./client.js"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "client.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "acryl": {
+    "apiVersion": 1,
+    "permissions": [
+      "fs.write",
+      "ui"
+    ],
+    "schemaVersion": 1,
+    "artifacts": {
+      "plugins": [
+        "./index.js"
+      ]
+    }
+  }
+}
