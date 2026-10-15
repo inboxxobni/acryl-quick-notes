@@ -6,12 +6,12 @@
 // Permissions: fs.write (writes its own plugin-data txt files), ui (TopBar widget).
 // Generated from: state-host-store + client-slot-header-action examples. Mutation class: HOT.
 import { mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 export const name = 'acryl-quick-notes'
-// `connection.rpc.handle` registers its channel through `webServer`, so both must be declared.
-export const inject = ['connection', 'webServer']
+// `connection.rpc.handle` registers its channel through `webServer`, so both must be declared. `dshHomePath` is declared too: the data
+// directory comes only from the app's home, so in an app without it the plugin waits (PENDING) instead of guessing a folder.
+export const inject = ['connection', 'webServer', 'dshHomePath']
 
 const CHANNEL = '/acryl-quick-notes'
 const MAX_NOTES = 500
@@ -19,8 +19,7 @@ const MAX_TEXT = 50000
 const ID_RE = /^[a-z0-9]{4,20}$/
 
 function dataDir(ctx) {
-  const home = ctx.get('dshHomePath')
-  return typeof home === 'function' ? home('plugin-data', name) : join(homedir(), '.acryl', '.dsh', 'plugin-data', name)
+  return ctx.get('dshHomePath')('plugin-data', name)
 }
 
 export function apply(ctx) {
