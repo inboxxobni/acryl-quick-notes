@@ -1,6 +1,6 @@
 {
   "name": "acryl-quick-notes",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Tiny notebook icon in the TopBar that opens a Quick Notes list, each note persisted as its own txt file on the host",
   "license": "MIT",
   "keywords": [
@@ -65,6 +65,13 @@
     "provides": {
       "host": [],
       "client": []
-    }
+    },
+    "slots": {
+      "offers": [],
+      "fills": [
+        "conversation.session.header.actions"
+      ]
+    },
+    "visibility": "public"
   }
 }
