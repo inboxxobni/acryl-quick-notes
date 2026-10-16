@@ -10,7 +10,7 @@ const ReactDOM = require('react-dom')
 const h = React.createElement
 console.info('[acryl-quick-notes] client module loaded')
 const ID = 'acryl-quick-notes'
-const CHANNEL = '/acryl-quick-notes'
+const PREFIX = 'acryl-quick-notes'
 const FALLBACK_KEY = 'acryl-quick-notes-list-fallback'
 
 function loadFallback() {
@@ -25,7 +25,7 @@ function saveFallback(notes) {
 
 function makeQuickNotes(connection) {
   const call = async (endpoint, payload) => {
-    const result = await connection.rpc.call(CHANNEL, endpoint, payload ?? {})
+    const result = await connection.rpc.call('/api', `${PREFIX}/${endpoint}`, payload ?? {})
     if (result && result.ok === false) throw new Error(result.error && result.error.message ? result.error.message : 'RPC call failed')
     return result && result.ok === true ? result.value : result
   }

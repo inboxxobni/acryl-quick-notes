@@ -9,11 +9,13 @@ import { mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync,
 import { join } from 'node:path'
 
 export const name = 'acryl-quick-notes'
-// `connection.rpc.handle` registers its channel through `webServer`, so both must be declared. `dshHomePath` is declared too: the data
-// directory comes only from the app's home, so in an app without it the plugin waits (PENDING) instead of guessing a folder.
-export const inject = ['connection', 'webServer', 'dshHomePath']
+// The endpoints are exact routes under connection's `/api` (behind its browser-auth and Host/Origin checks), so `webServer` is not needed:
+// that is what lets the plugin run in stock DeepSeek Harness, whose connection row cannot serve a third-party `rpc.handle` channel.
+// `dshHomePath` is declared too: the data directory comes only from the app's home, so in an app without it the plugin waits (PENDING).
+export const inject = ['connection', 'dshHomePath']
 
-const CHANNEL = '/acryl-quick-notes'
+/** Endpoints live at `/api/<PREFIX>/<endpoint>`; client.js calls them with `connection.rpc.call('/api', '<PREFIX>/<endpoint>', payload)`. */
+const PREFIX = 'acryl-quick-notes'
 const MAX_NOTES = 500
 const MAX_TEXT = 50000
 const ID_RE = /^[a-z0-9]{4,20}$/
@@ -111,9 +113,21 @@ export function apply(ctx) {
     },
   }
 
-  ctx.connection.rpc.handle(CHANNEL, async (endpoint, payload) => {
-    const handler = handlers[endpoint]
-    if (!handler) return fail(`unknown endpoint ${JSON.stringify(endpoint)}`)
-    try { return handler(payload) } catch (cause) { return fail(String(cause?.message ?? cause)) }
-  })
+  // One exact route per endpoint, answering the RPC envelope `rpc.call` sends: { type: 'client-request', rpcId, method, payload } in,
+  // { type: 'server-response', rpcId, result } out. Each registration is owned by this plugin and removed with it.
+  for (const [endpoint, handler] of Object.entries(handlers)) {
+    ctx.connection.fetch.register({
+      path: `/api/${PREFIX}/${endpoint}`,
+      methods: ['POST'],
+      requestBody: 'buffered',
+      async fetch(request) {
+        let message
+        try { message = await request.json() } catch { return new Response('body is not JSON', { status: 400 }) }
+        if (message?.type !== 'client-request' || typeof message.rpcId !== 'string') return new Response('not an RPC request', { status: 400 })
+        let result
+        try { result = handler(message.payload) } catch (cause) { result = fail(String(cause?.message ?? cause)) }
+        return Response.json({ type: 'server-response', rpcId: message.rpcId, result })
+      },
+    })
+  }
 }
